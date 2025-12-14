@@ -1,207 +1,264 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[codz]
-*$py.class
+# =========================================
+# 📊 Stock Return Direction Prediction
+# Problem: Cross-sectional Classification
+# Models: Baseline + Logistic + Random Forest + Neural Network
+# =========================================
 
-# C extensions
-*.so
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import wrds
+import warnings
+warnings.filterwarnings('ignore')
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+print("="*60)
+print("Stock Return Direction Prediction")
+print("="*60)
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# =========================================
+# Data Preparation
+# =========================================
+print("\n[1/4] Loading WRDS data...")
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+db = wrds.Connection()
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
+crsp = db.raw_sql("""
+    SELECT permno, date, ret, prc, vol, shrout
+    FROM crsp.msf
+    WHERE date >= '2018-01-01' AND date <= '2024-12-01'
+    AND prc IS NOT NULL AND ret IS NOT NULL
+    LIMIT 50000
+""")
 
-# Translations
-*.mo
-*.pot
+print(f"   Loaded: {len(crsp):,} records")
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+df = crsp.copy()
+df.rename(columns={'permno': 'stock_id', 'prc': 'price', 'vol': 'volume'}, inplace=True)
+df['market_cap'] = df['price'].abs() * df['shrout']
 
-# Flask stuff:
-instance/
-.webassets-cache
+# mock fundamentals (stand-in for Compustat)
+df['roe'] = np.random.normal(0.12, 0.08, len(df))
+df['pb'] = np.random.uniform(1, 5, len(df))
 
-# Scrapy stuff:
-.scrapy
+df = df.sort_values(['stock_id', 'date']).reset_index(drop=True)
 
-# Sphinx documentation
-docs/_build/
+print("   Computing features...")
 
-# PyBuilder
-.pybuilder/
-target/
+df['momentum'] = df.groupby('stock_id')['ret'].shift(1)
+df['volatility'] = df.groupby('stock_id')['ret'].transform(
+    lambda x: x.rolling(12, min_periods=3).std().shift(1))
+df['ma'] = df.groupby('stock_id')['price'].transform(
+    lambda x: x.rolling(20, min_periods=5).mean())
+df['ma_gap'] = (df['price'] - df['ma']) / df['ma'].replace(0, 1)
+df['vol_change'] = df.groupby('stock_id')['volume'].pct_change()
+df['log_mcap'] = np.log(df['market_cap'] + 1)
+df['roe_norm'] = (df['roe'] - df.groupby('date')['roe'].transform('mean')) / \
+                 df.groupby('date')['roe'].transform('std')
 
-# Jupyter Notebook
-.ipynb_checkpoints
+df['next_ret'] = df.groupby('stock_id')['ret'].shift(-1)
 
-# IPython
-profile_default/
-ipython_config.py
+features = ['momentum', 'volatility', 'ma_gap',
+            'vol_change', 'log_mcap', 'roe_norm', 'pb']
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+df = df.replace([np.inf, -np.inf], np.nan)
+df = df.dropna(subset=features + ['next_ret']).copy()
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+df['label'] = (df['next_ret'] > 0).astype(int)
 
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#uv.lock
+# Save full processed dataset
+df.to_csv('stock_data_processed.csv', index=False)
+print(f"   Saved: stock_data_processed.csv ({len(df):,} rows)")
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-#poetry.toml
+X = df[features].values
+y = df['label'].values
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
-#pdm.lock
-#pdm.toml
-.pdm-python
-.pdm-build/
+split = int(len(X) * 0.8)
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
 
-# pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-#pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
-.pixi
+scaler = StandardScaler()
+X_train_sc = scaler.fit_transform(X_train)
+X_test_sc = scaler.transform(X_test)
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+# Additional NaN check after scaling
+mask_train = ~np.isnan(X_train_sc).any(axis=1)
+mask_test = ~np.isnan(X_test_sc).any(axis=1)
+X_train_sc = X_train_sc[mask_train]
+y_train = y_train[mask_train]
+X_test_sc = X_test_sc[mask_test]
+y_test = y_test[mask_test]
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+# Save train/test datasets
+train_df = pd.DataFrame(X_train_sc, columns=features)
+train_df['label'] = y_train
+train_df.to_csv('stock_data_train.csv', index=False)
 
-# SageMath parsed files
-*.sage.py
+test_df = pd.DataFrame(X_test_sc, columns=features)
+test_df['label'] = y_test
+test_df.to_csv('stock_data_test.csv', index=False)
 
-# Environments
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+print(f"   Saved: stock_data_train.csv ({len(train_df):,} rows)")
+print(f"   Saved: stock_data_test.csv ({len(test_df):,} rows)")
 
-# Spyder project settings
-.spyderproject
-.spyproject
+print(f"   Samples: {len(X):,} | Train: {len(X_train_sc):,} | Test: {len(X_test_sc):,}")
 
-# Rope project settings
-.ropeproject
+# =========================================
+# Model Training
+# =========================================
+print("\n[2/4] Training models...")
 
-# mkdocs documentation
-/site
+# Baseline, avoid error from unbalanced data
+baseline_acc = max(np.mean(y_train), 1 - np.mean(y_train))
+print(f"   Baseline (Majority Class): {baseline_acc:.4f}")
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Logistic Regression
+logit = LogisticRegression(max_iter=1000)
+logit.fit(X_train_sc, y_train)
+y_pred_lg = logit.predict(X_test_sc)
+y_prob_lg = logit.predict_proba(X_test_sc)
+acc_lg = accuracy_score(y_test, y_pred_lg)
+print(f"   Logistic Reg.:  {acc_lg:.4f}")
 
-# Pyre type checker
-.pyre/
+# Random Forest
+rf = RandomForestClassifier(n_estimators=100, max_depth=10,
+                            random_state=42, n_jobs=-1)
+rf.fit(X_train_sc, y_train)
+y_pred_rf = rf.predict(X_test_sc)
+y_prob_rf = rf.predict_proba(X_test_sc)
+acc_rf = accuracy_score(y_test, y_pred_rf)
+print(f"   Random Forest:  {acc_rf:.4f}")
 
-# pytype static type analyzer
-.pytype/
+# Neural Network
+class Net(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(7, 100)
+        self.fc2 = nn.Linear(100, 100)
+        self.fc3 = nn.Linear(100, 2)
 
-# Cython debug symbols
-cython_debug/
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        return self.fc3(x)
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+net = Net()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
-# Abstra
-# Abstra is an AI-powered process automation framework.
-# Ignore directories containing user credentials, local state, and settings.
-# Learn more at https://abstra.io/docs
-.abstra/
+X_train_t = torch.FloatTensor(X_train_sc)
+y_train_t = torch.LongTensor(y_train)
+X_test_t = torch.FloatTensor(X_test_sc)
 
-# Visual Studio Code
-#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#  and can be added to the global gitignore or merged into this file. However, if you prefer, 
-#  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+for _ in range(100):
+    optimizer.zero_grad()
+    loss = criterion(net(X_train_t), y_train_t)
+    loss.backward()
+    optimizer.step()
 
-# Ruff stuff:
-.ruff_cache/
+with torch.no_grad():
+    out = net(X_test_t)
+    y_pred_nn = torch.argmax(out, dim=1).numpy()
+    acc_nn = accuracy_score(y_test, y_pred_nn)
 
-# PyPI configuration file
-.pypirc
+print(f"   Neural Network: {acc_nn:.4f}")
 
-# Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
-.cursorignore
-.cursorindexingignore
+# =========================================
+# Model Interpretation
+# =========================================
+print("\n[3/4] Model interpretation...")
 
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
+feat_imp = pd.DataFrame({
+    'feature': features,
+    'importance': rf.feature_importances_
+}).sort_values('importance', ascending=False)
+
+coef_df = pd.DataFrame({
+    'feature': features,
+    'coefficient': logit.coef_[0]
+}).sort_values('coefficient', ascending=False)
+
+# =========================================
+# Visualization
+# =========================================
+print("\n[4/4] Generating visualizations...")
+
+fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+
+# Accuracy comparison
+axes[0, 0].bar(
+    ['Baseline', 'Logistic', 'RF', 'NN'],
+    [baseline_acc, acc_lg, acc_rf, acc_nn]
+)
+axes[0, 0].axhline(0.5, color='red', linestyle='--')
+axes[0, 0].set_title("Model Accuracy")
+
+# RF importance
+axes[0, 1].barh(feat_imp['feature'], feat_imp['importance'])
+axes[0, 1].set_title("RF Feature Importance")
+axes[0, 1].invert_yaxis()
+
+# Permutation importance
+perm_imp = []
+base = accuracy_score(y_test, y_pred_rf)
+for i in range(len(features)):
+    Xp = X_test_sc.copy()
+    np.random.shuffle(Xp[:, i])
+    perm_imp.append(base - accuracy_score(y_test, rf.predict(Xp)))
+
+axes[0, 2].barh(features, perm_imp)
+axes[0, 2].set_title("Permutation Importance")
+axes[0, 2].invert_yaxis()
+
+# Logistic coefficients
+axes[0, 3].barh(coef_df['feature'], coef_df['coefficient'])
+axes[0, 3].axvline(0, color='black')
+axes[0, 3].set_title("Logistic Coefficients")
+axes[0, 3].invert_yaxis()
+
+# Confusion matrices
+sns.heatmap(confusion_matrix(y_test, y_pred_rf),
+            annot=True, fmt='d', ax=axes[1, 0],
+            xticklabels=['Down', 'Up'], yticklabels=['Down', 'Up'])
+axes[1, 0].set_title("RF Confusion")
+axes[1, 0].set_xlabel("Predicted")
+axes[1, 0].set_ylabel("Actual")
+
+sns.heatmap(confusion_matrix(y_test, y_pred_nn),
+            annot=True, fmt='d', ax=axes[1, 1],
+            xticklabels=['Down', 'Up'], yticklabels=['Down', 'Up'])
+axes[1, 1].set_title("NN Confusion")
+axes[1, 1].set_xlabel("Predicted")
+axes[1, 1].set_ylabel("Actual")
+
+sns.heatmap(confusion_matrix(y_test, y_pred_lg),
+            annot=True, fmt='d', ax=axes[1, 2],
+            xticklabels=['Down', 'Up'], yticklabels=['Down', 'Up'])
+axes[1, 2].set_title("Logistic Confusion")
+axes[1, 2].set_xlabel("Predicted")
+axes[1, 2].set_ylabel("Actual")
+axes[1, 3].axis('off')
+
+plt.tight_layout()
+plt.savefig("stock_prediction_results.png", dpi=300)
+plt.show()
+
+# =========================================
+# Summary
+# =========================================
+print("\n" + "="*60)
+print("Summary")
+print("="*60)
+
+print(f"Baseline: {baseline_acc:.3f}")
+print(f"Logistic: {acc_lg:.3f}")
+print(f"RF:       {acc_rf:.3f}")
+print(f"NN:       {acc_nn:.3f}")
+print("✅ Complete!")
