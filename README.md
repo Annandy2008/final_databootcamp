@@ -104,9 +104,8 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 
 ### 4.4 Visualization
 
-![Model Performance and Feature Importance](./figures/0aec1a1b-db42-44ea-beb1-cc80b81ecafc.png)
+<img width="6000" height="3000" alt="stock_prediction_results" src="https://github.com/user-attachments/assets/cb75b05f-ca98-4993-bd88-64bc59732cd8" />
 
----
 
 ## 5. Conclusions
 
