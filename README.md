@@ -65,7 +65,7 @@ Exploratory analysis is conducted to understand the structure and limitations of
 
 Key observations include:
 - The return direction label is **mildly imbalanced**, with positive returns occurring more frequently.
-- Momentum and volatility display heavy tails and substantial dispersion.
+- Momentum and volatility exhibit skewed and dispersed distributions, with visible tail behavior.
 - Fundamental proxies (ROE and PB) show weak univariate relationships with next-month returns.
 
 <img width="1800" height="1200" alt="figure_E1_return_direction" src="https://github.com/user-attachments/assets/156aeb9e-057b-40e4-8e02-09fed0f2ef0e" />
