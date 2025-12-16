@@ -108,9 +108,8 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 
 ### 4.5 Results and Interpretation
 
-
-
 ### Figure 1. Model Accuracy Comparison
+![part_1](https://github.com/user-attachments/assets/15b970bb-8572-4bc6-beb8-6eab55652b79)
 
 **Results**
 - All models achieve test accuracy in the range of 55%–57%.
@@ -123,6 +122,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Model choice has a smaller impact than the intrinsic noise in return dynamics.
 
 ### Figure 2. Random Forest Feature Importance
+![part_2](https://github.com/user-attachments/assets/eb1f6e84-aa76-47cf-a561-c6a54f21dd44)
 
 **Results**
 - Volatility is the most important feature in the Random Forest model.
@@ -135,6 +135,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Fundamental proxies contribute limited information in this setting.
 
 ### Figure 3. Permutation Importance
+![part_3](https://github.com/user-attachments/assets/450bc987-0b9b-4363-b468-2880d6711197)
 
 **Results**
 - Permuting volatility and momentum leads to the largest drop in prediction accuracy.
@@ -149,6 +150,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Compared with Random Forest internal importance, permutation importance better reflects true predictive dependence.
 
 ### Figure 4. Logistic Regression Coefficients
+![part_4](https://github.com/user-attachments/assets/889d6eda-eee3-4050-bf0b-a7e124dc480d)
 
 **Results**
 - Momentum and log market capitalization have positive coefficients.
@@ -161,6 +163,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Linear relationships between most features and return direction are weak.
 
 ### Figure 5. Random Forest Confusion Matrix
+![part_5](https://github.com/user-attachments/assets/a5154f76-d3cc-49ec-85e2-4e0f5082e7b3)
 
 **Results**
 - The model correctly predicts a large number of positive-return observations.
@@ -173,6 +176,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Downside risk is more difficult to capture than upside movements.
 
 ### Figure 6. Neural Network Confusion Matrix
+![part_6](https://github.com/user-attachments/assets/99979561-9a41-4aa3-8af4-e21c0466e7c4)
 
 **Results**
 - The Neural Network predicts positive returns in the majority of cases.
@@ -185,6 +189,7 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - The network amplifies class imbalance rather than correcting it.
 
 ### Figure 7. Logistic Regression Confusion Matrix
+![part_7](https://github.com/user-attachments/assets/6c6f62f9-0a53-4360-9de4-ebfe0e322ad2)
 
 **Results**
 - Predictions are more evenly distributed across classes compared to RF and NN.
@@ -195,6 +200,8 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 - Logistic Regression provides more stable and balanced predictions.
 - Predictive power remains limited under a linear specification.
 - Interpretability comes at the cost of performance gains.
+
+In the complex task of predicting next-month stock return direction, all models achieve only slightly better than random accuracy (55%-57%), indicating extremely low predictability of returns at this horizon. The performance gains from model selection are far outweighed by inherent market noise. The effective predictive information concentrates mainly on volatility, momentum, and market capitalization—features related to technical factors and risk—while fundamental indicators such as ROE and book-to-market ratio contribute minimally, possibly due to simplified proxy variables or the unsuitability of fundamental logic for monthly horizons. Although nonlinear models (e.g., random forests) perform marginally better, both they and neural networks exhibit significant bias toward predicting the "positive return" class, suggesting class imbalance and the greater difficulty in capturing downside risk compared to upside opportunity. Overall, this prediction scenario is constrained by high noise and weak signals, with the robust patterns extracted by models mainly reflecting risk and trading behavior characteristics.
 
 ## 5. Conclusions
 
