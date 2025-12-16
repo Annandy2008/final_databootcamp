@@ -1,5 +1,12 @@
 # Stock Return Direction Prediction
 
+### **Team Members**
+- **Menghan Liu**  
+- **Yicheng Song**  
+- **Jenny Zhu**
+
+---
+
 ## 1. Introduction
 
 This project studies whether the **direction of next-month stock returns** can be predicted using firm-level characteristics constructed from CRSP market data and Compustat fundamental data. The task is formulated as a **cross-sectional binary classification problem**, where each stock-month observation is used to predict whether the following month's return is positive or negative.
