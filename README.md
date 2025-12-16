@@ -68,9 +68,12 @@ Key observations include:
 - Momentum and volatility display heavy tails and substantial dispersion.
 - Fundamental proxies (ROE and PB) show weak univariate relationships with next-month returns.
 
-<!-- PLACEHOLDER -->
-**Figure E1. Distribution of Return Direction (Up vs Down)**  
-**Figure E2. Distribution of Key Features (Momentum, Volatility)**
+<img width="1800" height="1200" alt="figure_E1_return_direction" src="https://github.com/user-attachments/assets/156aeb9e-057b-40e4-8e02-09fed0f2ef0e" />
+ 
+<img width="3600" height="1200" alt="figure_E2_feature_distributions" src="https://github.com/user-attachments/assets/c711ee8b-8ab8-4cab-b353-15697b6854f0" />
+
+<img width="3600" height="1200" alt="figure_E3_fundamentals_NextReturn" src="https://github.com/user-attachments/assets/9c8081a0-e92b-4d05-8cb6-330d6220b650" />
+
 
 These patterns suggest that any predictive signal is likely to be weak and noisy, motivating comparison against a simple benchmark.
 
