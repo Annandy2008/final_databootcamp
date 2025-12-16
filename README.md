@@ -55,7 +55,7 @@ Using the raw CRSP variables, several lagged features are constructed to capture
 After feature construction:
 - Observations with missing or infinite values are removed
 - Features are standardized using **StandardScaler**
-- The dataset is split into **80% training and 20% testing**
+- The dataset is split into **80% training and 20% testing**. The dataset is split into training and testing samples using an ordered split after    sorting by stock and date. This preserves the temporal ordering within each firm while maintaining a cross-sectional prediction setting.
 
 ---
 
