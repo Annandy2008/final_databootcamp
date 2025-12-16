@@ -48,7 +48,7 @@ Using the raw CRSP variables, several lagged features are constructed to capture
 | volatility | Return risk | 12-month rolling std of returns (lagged) |
 | ma_gap | Price deviation | (Price − 20-month MA) / MA |
 | vol_change | Liquidity change | Monthly % change in volume |
-| log_mcap | Firm size | log(|price| × shares outstanding) |
+| log_mcap | Firm size | log(abs(price) × shares outstanding) |
 | roe_norm | Relative profitability | ROE normalized cross-sectionally by date |
 | pb | Valuation proxy | Price-to-book ratio |
 
