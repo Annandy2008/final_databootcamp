@@ -106,6 +106,95 @@ The project evaluates the performance of linear vs. non-linear models and analyz
 
 <img width="6000" height="3000" alt="stock_prediction_results" src="https://github.com/user-attachments/assets/cb75b05f-ca98-4993-bd88-64bc59732cd8" />
 
+### 4.5 Results and Interpretation
+
+
+
+### Figure 1. Model Accuracy Comparison
+
+**Results**
+- All models achieve test accuracy in the range of 55%–57%.
+- Random Forest records the highest accuracy among the four models.
+- Logistic Regression and Neural Network perform similarly to the baseline.
+
+**Interpretation**
+- The narrow accuracy range indicates limited predictability of next-month stock returns.
+- Non-linear models provide only marginal improvement over linear benchmarks.
+- Model choice has a smaller impact than the intrinsic noise in return dynamics.
+
+### Figure 2. Random Forest Feature Importance
+
+**Results**
+- Volatility is the most important feature in the Random Forest model.
+- Log market capitalization and momentum follow in importance.
+- ROE and price-to-book ratio rank among the least important features.
+
+**Interpretation**
+- The model relies primarily on risk-related and trading-based characteristics.
+- Market capitalization captures cross-sectional heterogeneity beyond pure returns.
+- Fundamental proxies contribute limited information in this setting.
+
+### Figure 3. Permutation Importance
+
+**Results**
+- Permuting volatility and momentum leads to the largest drop in prediction accuracy.
+- Log market capitalization remains positively important but weaker than the top two features.
+- Permutation importance for ROE and PB is low and partially negative.
+
+**Interpretation**
+- Volatility and momentum provide robust marginal contributions to model performance.
+- Fundamental variables contain limited predictive information, potentially because:
+  - Simplified or mock fundamentals are used;
+  - The monthly prediction horizon is unfavorable for fundamentals.
+- Compared with Random Forest internal importance, permutation importance better reflects true predictive dependence.
+
+### Figure 4. Logistic Regression Coefficients
+
+**Results**
+- Momentum and log market capitalization have positive coefficients.
+- Volatility has a negative coefficient.
+- Coefficients for ROE, PB, and MA gap are close to zero.
+
+**Interpretation**
+- Higher recent returns increase the probability of positive next-month returns.
+- Higher volatility is associated with a lower likelihood of positive returns.
+- Linear relationships between most features and return direction are weak.
+
+### Figure 5. Random Forest Confusion Matrix
+
+**Results**
+- The model correctly predicts a large number of positive-return observations.
+- Misclassification of negative returns is relatively frequent.
+- False positives exceed false negatives.
+
+**Interpretation**
+- The model exhibits a bias toward predicting positive returns.
+- Class imbalance and asymmetric signal strength contribute to this pattern.
+- Downside risk is more difficult to capture than upside movements.
+
+### Figure 6. Neural Network Confusion Matrix
+
+**Results**
+- The Neural Network predicts positive returns in the majority of cases.
+- Correct classification of negative returns is rare.
+- Overall accuracy remains comparable to other models.
+
+**Interpretation**
+- Model complexity does not translate into improved discrimination.
+- Weak predictive signals limit the effectiveness of high-capacity models.
+- The network amplifies class imbalance rather than correcting it.
+
+### Figure 7. Logistic Regression Confusion Matrix
+
+**Results**
+- Predictions are more evenly distributed across classes compared to RF and NN.
+- Both false positives and false negatives remain substantial.
+- Overall accuracy is close to the baseline.
+
+**Interpretation**
+- Logistic Regression provides more stable and balanced predictions.
+- Predictive power remains limited under a linear specification.
+- Interpretability comes at the cost of performance gains.
 
 ## 5. Conclusions
 
