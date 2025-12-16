@@ -237,13 +237,11 @@ The Neural Network shows the strongest positive class bias, correctly identifyin
 
 ---
 
-## 6. Data Limitations and Methodological Considerations
-
-### 6.1 Fundamental Data Matching
+## 6. Data Limitations
 
 This analysis merges CRSP monthly returns with Compustat quarterly fundamentals using a 6-month lookback window and the CRSP-Compustat link table. While this approach successfully links companies across databases, several considerations affect interpretation:
 
-**1. Look-Ahead Bias (Minor)**
+### 6.1. Look-Ahead Bias (Minor)
 
 The SQL query condition `c.datadate <= a.date` permits the use of quarterly data released during the prediction month. For example, if predicting July returns, the query may include Q2 earnings announced mid-July, which would not have been available at the beginning of July.
 
@@ -252,9 +250,9 @@ The SQL query condition `c.datadate <= a.date` permits the use of quarterly data
 - The deduplication step ensures only the most recent quarter is used
 - The cross-sectional standardization reduces sensitivity to absolute timing
 
-**Why this does not invalidate our findings:** The primary conclusion—that short-horizon returns are difficult to predict—holds regardless. If anything, the slight look-ahead bias would favor fundamental features, yet they still contribute less than momentum and volatility in permutation importance. A more conservative approach would enforce `c.datadate < a.date - INTERVAL '1 month'`.
+**However**, this does not pose too much threat to our conclusion. If anything, the slight look-ahead bias would favor fundamental features, yet they still contribute less than momentum and volatility in permutation importance.
 
-**2. Temporal Lag of Fundamentals**
+### 6.2. Temporal Lag of Fundamentals
 
 Quarterly accounting data inherently lags the prediction target by 2-5 months:
 - Q1 ends March 31 → typically reported by mid-May
@@ -262,95 +260,42 @@ Quarterly accounting data inherently lags the prediction target by 2-5 months:
 
 **Impact:** ROE and P/B reflect somewhat stale information relative to high-frequency market variables like momentum and volume. This is expected and reflects the fundamental nature of accounting data—it provides a slow-moving picture of firm health rather than day-to-day dynamics.
 
-**Why this does not invalidate our findings:** Quarterly fundamentals are widely used in both academic research and practitioner models despite this lag. The comparison remains fair because all features face appropriate lags (momentum uses t-1 returns, volatility uses rolling 12-month data, etc.). The research question is whether these fundamentals, despite their lag, add predictive power to market-based features.
+**However**, quarterly fundamentals are widely used in both academic research and practitioner models despite this lag. The comparison remains fair because all features face appropriate lags (momentum uses t-1 returns, volatility uses rolling 12-month data, etc.). The research question is whether these fundamentals, despite their lag, add predictive power to market-based features.
 
-**3. Sample Selection Bias**
+## 6.3. Sample Selection Bias
 
-The initial 50,000 CRSP observations reduced to 22,795 after merging with Compustat, representing stocks with available fundamental data. After feature construction, the final sample contains 21,224 observations.
+The initial 50,000 CRSP observations were reduced to 22,795 after merging with Compustat, representing stocks with available fundamental data. After feature construction, the final sample contains 21,224 observations.
 
 **Impact:** The analysis is restricted to larger, more established firms with Compustat coverage. Small-cap stocks, recent IPOs, and companies not filing standard quarterly reports are excluded.
 
-**Why this does not invalidate our findings:** This sample selection is standard in academic finance research combining CRSP and Compustat. The conclusion that "next-month return direction is difficult to predict" is, if anything, conservative—larger firms with better data quality should be more predictable than small-caps. The results likely represent an upper bound on predictability.
-
-**4. Deduplication of Quarterly Data**
-
-The SQL query can return multiple quarterly reports per stock-month when reports fall within the 6-month window. The analysis addresses this by sorting by `datadate` (descending) and keeping only the first (most recent) quarterly observation for each stock-month.
-
-**Impact:** Ensures each stock-month has exactly one ROE and P/B value, preventing artificial inflation of feature importance through duplicated observations.
-
-**Verification:** Console output confirms successful deduplication: "50,000 records → 22,795 records after deduplication → 21,224 after feature engineering." The deduplication removed 27,205 duplicate stock-month records (54.4% of initial load), demonstrating the importance of this step.
+**Why this does not invalidate our findings:** This sample selection is standard in academic finance research, combining CRSP and Compustat. The conclusion that "next-month return direction is difficult to predict" is, if anything, conservative—larger firms with better data quality should be more predictable than small-caps. The results likely represent an upper bound on predictability.
 
 ---
 
-### 6.2 Cross-Sectional vs. Time-Series Prediction
+## 7. Conclusion
 
-This project employs a **cross-sectional design**: at each time period, we predict return direction across different stocks using their contemporaneous characteristics. This differs from time-series prediction, where we would forecast future returns for individual stocks using their own historical patterns.
-
-**Implications:**
-- The model evaluates whether, within a given month, certain characteristics distinguish stocks likely to rise from those likely to fall
-- Fundamental features that change slowly (like ROE) may be less informative in cross-section than in time-series
-- The ordered train-test split preserves temporal structure but evaluates cross-sectional patterns
-
-This design choice affects feature importance: momentum and volatility, which vary substantially across stocks within each month, naturally dominate slow-moving fundamentals in a cross-sectional setting.
-
----
-
-### 6.3 Why These Limitations Do Not Invalidate the Research
-
-The identified limitations—look-ahead bias, fundamental lag, sample selection, and cross-sectional design—are standard trade-offs in empirical finance research. They affect the *interpretation* and *magnitude* of findings but do not undermine the core conclusions:
-
-1. **Primary finding robust:** All models achieve only modest improvements over baseline (2-3 percentage points), regardless of data limitations. Even if look-ahead bias were eliminated entirely, this conclusion would strengthen rather than weaken.
-
-2. **Feature importance patterns consistent:** Multiple methodologies (Gini importance, permutation importance, logistic coefficients) all suggest momentum and volatility matter more than accounting fundamentals for monthly prediction, despite potential biases favoring fundamentals.
-
-3. **Standard academic practice:** The data construction follows conventions in published finance research. Acknowledging limitations transparently demonstrates methodological awareness rather than indicating flawed analysis.
-
-4. **Conservative interpretation:** The analysis avoids claiming strong predictability or superior performance. The conclusion that "monthly returns are difficult to predict" is conservative and holds under various specification choices.
-
-For a more rigorous treatment, future work could implement stricter temporal lags, use rolling cross-validation, or explore time-series prediction for individual stocks. However, for the purpose of comparing model performance and understanding feature contributions, the current approach provides valid and interpretable results.
-
----
-
-## 7. Conclusion and Future Directions
-
-This project evaluates the predictability of next-month stock return direction using a combination of market-based technical features and accounting-based fundamental features. Across linear and nonlinear classification approaches, predictive performance improves only marginally relative to a simple baseline (55.6% vs. 53.1%), underscoring the limited predictability of short-horizon stock returns.
+This project evaluates the predictability of next-month stock return direction using market-based and fundamental features across multiple classification models. The results reveal limited short-term predictability, with the best model (Random Forest) achieving 55.6% accuracy versus a 53.1% baseline—a modest 2.5 percentage point improvement.
 
 **Key Findings:**
 
-1. **Modest Predictability:** All models achieve 54-56% accuracy versus a 53% baseline, consistent with weak-form market efficiency
+1. **Model Performance:** Random Forest performs best (55.6%), followed by Logistic Regression (54.5%) and Neural Network (54.3%). The similarity in performance across simple and complex models suggests that model architecture matters less than the intrinsic noise in monthly return data.
 
-2. **Feature Contributions Vary by Metric:**
-   - Gini importance (RF): ROE, size, volume change most important
-   - Permutation importance: Momentum, volatility, size most important
-   - Logistic coefficients: Size dominates in linear specification
+2. **Feature Importance:** Different interpretation methods reveal distinct patterns:
+   - **Gini importance** ranks ROE and firm size highest
+   - **Permutation importance** identifies momentum and volatility as most critical
+   - The discrepancy suggests that while ROE helps organize decision trees, momentum and volatility drive actual predictions
 
-3. **Technical > Fundamental for Short Horizons:** Permutation importance suggests momentum and volatility drive predictions more than accounting ratios, likely because monthly returns reflect near-term dynamics that fundamentals (updated quarterly) cannot capture
+3. **Technical Features Dominate:** Permutation-based analysis indicates that short-horizon predictability comes primarily from momentum and volatility rather than accounting fundamentals. This likely reflects that monthly returns respond to near-term market dynamics, while quarterly fundamentals change slowly and lag by several months.
 
-4. **Model Complexity Adds Little:** Neural Networks do not outperform simpler models and exhibit stronger positive class bias, suggesting increased capacity does not overcome data noise
+4. **Prediction Asymmetry:** All models exhibit bias toward predicting positive returns and struggle to identify downside months, with the Neural Network showing the strongest positive class bias (only 18.5% recall on down months).
 
-5. **Asymmetric Prediction Errors:** All models struggle more with predicting down months than up months, possibly reflecting genuine asymmetry in return dynamics or the challenges of capturing tail events
+**Implications:**
 
-**Broader Implications:**
-
-The results align with the efficient market hypothesis: publicly available information (both technical and fundamental) provides limited exploitable patterns for short-term return prediction. The fact that sophisticated ML models cannot substantially beat simple baselines suggests that monthly return direction contains significant unpredictable noise.
-
-The discrepancy between Gini-based and permutation-based importance rankings highlights the value of using multiple interpretation methods. Gini importance measures how features organize decision trees, while permutation importance measures actual predictive reliance—both provide valuable but distinct perspectives.
+The modest improvements over baseline align with efficient market theory: publicly available information provides limited exploitable patterns for monthly return prediction. Even sophisticated neural networks cannot extract substantially more signal than linear models, suggesting the predictable component of monthly returns is small relative to noise.
 
 **Future Directions:**
 
-1. **Richer Fundamental Data:** Incorporate additional Compustat variables (cash flow, R&D, margins) or alternative data (sentiment, analyst forecasts)
-
-2. **Longer Prediction Horizons:** Evaluate 3-month or 6-month return direction, where fundamentals may have more time to manifest
-
-3. **Time-Series Prediction:** Shift from cross-sectional to firm-specific time-series models to leverage individual stock dynamics
-
-4. **Economic Evaluation:** Translate accuracy metrics into portfolio returns, transaction costs, and risk-adjusted performance
-
-5. **Alternative Targets:** Predict magnitude of returns, probability of large moves, or downside risk rather than simple direction
-
-6. **Temporal Cross-Validation:** Implement rolling windows or expanding windows to better simulate real-world deployment
-
-7. **Feature Interaction:** Explore explicit interaction terms or attention mechanisms to model non-additive effects
+Future work could explore longer prediction horizons (3-6 months) where fundamentals may prove more informative, implement economic evaluation through simulated trading strategies, or investigate firm-specific time-series models rather than cross-sectional prediction.
 
 ---
 
@@ -381,4 +326,3 @@ All results in this project can be reproduced using the provided code and data a
 - Compustat North America, Fundamentals Quarterly
 - CRSP-Compustat Merged Database (CCM) Link Table
 
-*Project completed as part of Final Project — December 2024*
