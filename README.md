@@ -87,7 +87,7 @@ Using the raw variables, several lagged features are constructed to capture rece
 
 ### 2.4 Exploratory Data Analysis (EDA)
 
-Exploratory analysis is conducted to understand the structure and limitations of the data prior to modeling.
+Exploratory Data Analysis is conducted to understand the structure, distributional properties, and limitations of the dataset prior to model training. The analysis is performed on the fully processed stock–month panel after deduplication, feature construction, and removal of missing values. Each observation represents a unique stock–month, with features constructed using information available at or before month t, and a binary label indicating whether the stock’s return in month t + 1 is positive.
 
 Key observations include:
 - The return direction label is **mildly imbalanced**, with positive returns occurring in approximately 53% of cases
@@ -101,7 +101,21 @@ Key observations include:
 <img width="3600" height="1200" alt="figure_E3_fundamentals_NextReturn" src="https://github.com/user-attachments/assets/98d017d3-1d0b-4035-9b40-f40f727f9bb0" />
 
 
-These patterns suggest that any predictive signal is likely to be weak and noisy, motivating comparison against a simple benchmark.
+Return Direction Distribution
+
+Figure E1 displays the distribution of the return direction label. Positive next-month returns account for approximately 53.1% of observations, while negative returns account for 46.9%, indicating a mild class imbalance. Although the imbalance is not severe, it implies that a naïve majority-class predictor would already achieve an accuracy slightly above 50%. This motivates the use of a majority-class baseline as a reference point when evaluating model performance.
+
+Feature Distributions
+
+Figure E2 illustrates the empirical distributions of momentum and volatility, two key market-based predictors. Momentum, defined as the previous month’s return, is centered near zero but exhibits heavy tails, reflecting the well-documented fat-tailed behavior of equity returns. Volatility, measured as a lagged 12-month rolling standard deviation of returns, is right-skewed, with most observations concentrated at relatively low levels and a long tail corresponding to periods of elevated market uncertainty. These distributional characteristics suggest that extreme values play an important role and that linear models may struggle to fully capture their effects.
+
+Fundamentals and Univariate Relationships
+
+Figure E3 examines the relationship between accounting-based fundamentals and next-month returns. Scatter plots of return on equity (ROE) and price-to-book (PB) ratios against next-month returns reveal weak and noisy univariate relationships, with no clear linear pattern. This indicates that, at a one-month prediction horizon, fundamental variables provide limited standalone predictive power. This result is consistent with the slow-moving nature of quarterly accounting data and the high noise present in short-horizon stock returns.
+
+Implications for Modeling
+
+Overall, the EDA highlights the inherent difficulty of predicting next-month stock return direction. The combination of mild class imbalance, heavy-tailed feature distributions, and weak univariate relationships suggests that any predictive signal is likely to be small and noisy. These findings motivate comparison against a simple benchmark and justify evaluating multiple models with varying degrees of flexibility to assess whether nonlinear methods can extract incremental predictive content from the data.
 
 ---
 
