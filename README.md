@@ -199,7 +199,7 @@ Figure R2 displays impurity-based (Gini) feature importance from the Random Fore
 <img width="754" height="712" alt="image" src="https://github.com/user-attachments/assets/e4767f14-d6f3-4f8b-834f-d13ee7f894fc" />
 
 **Interpretation.**  
-The Gini-based importance suggests that normalized ROE is the most frequently used feature for splitting decision trees in the Random Forest. Firm size (log_mcap) and trading activity (vol_change) also contribute substantially. However, this metric measures split frequency and quality rather than direct predictive power, which motivates examining permutation importance for comparison.
+The Random Forest assigns relatively balanced importance across features, with **normalized ROE (roe_norm)** ranked highest, followed by **firm size (log_mcap)**. Trading activity and technical indicators—including **vol_change**, **momentum**, **ma_gap**, and **volatility**—also contribute meaningfully, while **price-to-book (pb)** has the lowest importance.Unlike linear models, Random Forests capture nonlinear interactions, so importance reflects how frequently a feature is used for splitting and how much it reduces impurity across trees. The relatively even distribution suggests that predictive information is diffuse rather than dominated by a single variable.
 
 ---
 
@@ -207,17 +207,16 @@ The Gini-based importance suggests that normalized ROE is the most frequently us
 
 Permutation importance measures the change in model accuracy when individual features are randomly shuffled, providing a more direct assessment of predictive reliance.
 
-<img width="764" height="748" alt="image" src="https://github.com/user-attachments/assets/ce58bfb7-faf1-4439-a980-2dac3584c78b" />
+<img width="738" height="720" alt="image" src="https://github.com/user-attachments/assets/0a327f5d-f69d-46dd-818d-a43c3a08e951" />
 
 **Interpretation.**  
-Permutation importance reveals a different story: momentum and volatility cause the largest accuracy drops when permuted, indicating they are the most critical for actual predictions. Firm size (log_mcap) and normalized ROE show moderate importance, while price-to-book ratio has minimal impact.
+Permutation importance shows that **firm size (log_mcap)** is the most important feature: shuffling it leads to the largest decline in predictive accuracy. **Normalized ROE (roe_norm)** is the second most important variable, indicating that profitability contains meaningful predictive information even at a one-month horizon.**Price-to-book (pb)** and **moving-average gap (ma_gap)** exhibit moderate importance, while **momentum**, **volatility**, and **volume change** contribute relatively little once other variables are accounted for.
 
-**Discrepancy with RF Importance:** The disagreement between Gini-based and permutation importance is notable and informative. This discrepancy commonly arises in financial prediction when:
-- Features are correlated (e.g., profitability and firm size often correlate)
-- The prediction task has weak signal (our ~55% vs 53% baseline)
-- Different metrics capture different aspects: Gini measures split utility while permutation measures prediction degradation
+This ranking differs substantially from impurity-based Random Forest importance, illustrating a key distinction:
+- Gini importance reflects how features help partition the data
+- Permutation importance reflects how much predictions actually depend on a feature
+The permutation-based results suggest that, in this dataset, **cross-sectional firm characteristics (size and profitability)** drive predictive performance more than short-term technical signals.
 
-The permutation-based ranking appears more aligned with financial intuition, suggesting that short-horizon return patterns are driven primarily by momentum and volatility rather than accounting fundamentals.
 
 ---
 
@@ -237,9 +236,8 @@ Confusion matrices reveal prediction patterns across all models:
 <img width="2234" height="734" alt="image" src="https://github.com/user-attachments/assets/f32cfd0a-9eed-4fbc-9b79-1abc827b67d1" />
 
 **Interpretation.**  
-All models exhibit asymmetry in classification errors, with a tendency to predict positive returns. This reflects both the mild class imbalance (53% positive in training) and the greater difficulty of capturing downside movements in noisy monthly data. 
-
-The Neural Network shows the strongest positive class bias, correctly identifying only 371 of 2,004 actual down months (18.5% recall for negative class). This suggests that increased model flexibility does not help extract downside signals; instead, the model defaults to the more frequent positive class. Random Forest achieves better balance with 35.6% recall on the negative class.
+The most dominant coefficient is **log_mcap**, indicating that firm size has the strongest linear association with next-month return direction. **Normalized ROE (roe_norm)** also has a positive coefficient, suggesting that more profitable firms are modestly more likely to experience positive returns.**Volatility** and **ma_gap** carry small positive coefficients, while **momentum** and **volume change** are associated with negative coefficients. The **price-to-book (pb)** coefficient is near zero, indicating minimal linear contribution.
+Overall, coefficient magnitudes are small, reflecting weak linear relationships and reinforcing the idea that predictability at the monthly horizon is limited. The negative momentum coefficient suggests that simple linear momentum effects may be unstable or nonlinear at this frequency.
 
 ---
 
