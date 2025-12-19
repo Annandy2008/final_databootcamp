@@ -100,6 +100,8 @@ Key observations include:
 
 <img width="3600" height="1200" alt="figure_E3_fundamentals_NextReturn" src="https://github.com/user-attachments/assets/98d017d3-1d0b-4035-9b40-f40f727f9bb0" />
 
+These patterns suggest that any predictive signal is likely to be weak and noisy, motivating comparison against a simple benchmark.
+
 ---
 
 ## 3. Models and Methodology
@@ -266,13 +268,6 @@ Quarterly accounting data inherently lags the prediction target by 2-5 months:
 
 **However**, quarterly fundamentals are widely used in both academic research and practitioner models despite this lag. The comparison remains fair because all features face appropriate lags (momentum uses t-1 returns, volatility uses rolling 12-month data, etc.). The research question is whether these fundamentals, despite their lag, add predictive power to market-based features.
 
-## 6.3. Sample Selection Bias
-
-The initial 50,000 CRSP observations were reduced to 22,795 after merging with Compustat, representing stocks with available fundamental data. After feature construction, the final sample contains 21,224 observations.
-
-**Impact:** The analysis is restricted to larger, more established firms with Compustat coverage. Small-cap stocks, recent IPOs, and companies not filing standard quarterly reports are excluded.
-
-**Why this does not invalidate our findings:** This sample selection is standard in academic finance research, combining CRSP and Compustat. The conclusion that "next-month return direction is difficult to predict" is, if anything, conservative—larger firms with better data quality should be more predictable than small-caps. The results likely represent an upper bound on predictability.
 
 ---
 
