@@ -236,8 +236,8 @@ Confusion matrices reveal prediction patterns across all models:
 <img width="2234" height="734" alt="image" src="https://github.com/user-attachments/assets/f32cfd0a-9eed-4fbc-9b79-1abc827b67d1" />
 
 **Interpretation.**  
-The most dominant coefficient is **log_mcap**, indicating that firm size has the strongest linear association with next-month return direction. **Normalized ROE (roe_norm)** also has a positive coefficient, suggesting that more profitable firms are modestly more likely to experience positive returns.**Volatility** and **ma_gap** carry small positive coefficients, while **momentum** and **volume change** are associated with negative coefficients. The **price-to-book (pb)** coefficient is near zero, indicating minimal linear contribution.
-Overall, coefficient magnitudes are small, reflecting weak linear relationships and reinforcing the idea that predictability at the monthly horizon is limited. The negative momentum coefficient suggests that simple linear momentum effects may be unstable or nonlinear at this frequency.
+Confusion matrices show that all models exhibit a bias toward predicting positive returns, reflecting the class imbalance in the data and the difficulty of identifying downside months. This asymmetry is consistent with earlier coefficient-based results, which indicate that firm size and profitability dominate linear predictions while other features contribute weakly.
+
 
 ---
 
@@ -253,6 +253,8 @@ The SQL query condition `c.datadate <= a.date` permits the use of quarterly data
 - Most quarterly reports are released 45-90 days after quarter-end
 - The deduplication step ensures only the most recent quarter is used
 - The cross-sectional standardization reduces sensitivity to absolute timing
+
+---
 
 ### 6.2. Temporal Lag of Fundamentals
 
@@ -276,11 +278,12 @@ This project evaluates the predictability of next-month stock return direction u
 1. **Model Performance:** Random Forest performs best (55.6%), followed by Logistic Regression (54.5%) and Neural Network (54.3%). The similarity in performance across simple and complex models suggests that model architecture matters less than the intrinsic noise in monthly return data.
 
 2. **Feature Importance:** Different interpretation methods reveal distinct patterns:
-   - **Gini importance** ranks ROE and firm size highest
-   - **Permutation importance** identifies momentum and volatility as most critical
-   - The discrepancy suggests that while ROE helps organize decision trees, momentum and volatility drive actual predictions
+   - **Gini importance** ranks normalized ROE and firm size highest, reflecting how these variables frequently split decision trees
+   - **Permutation importance** identifies firm size (log_mcap) as the most critical feature, followed by normalized ROE, indicating that cross-sectional firm characteristics drive actual predictive performance
+   - The discrepancy highlights that impurity-based importance reflects tree structure, while permutation importance captures true predictive reliance
 
-3. **Technical Features Dominate:** Permutation-based analysis indicates that short-horizon predictability comes primarily from momentum and volatility rather than accounting fundamentals. This likely reflects that monthly returns respond to near-term market dynamics, while quarterly fundamentals change slowly and lag by several months.
+
+3. **Firm Characteristics Dominate:** Permutation-based analysis indicates that short-horizon predictability is driven primarily by cross-sectional firm characteristics—especially firm size and profitability—rather than short-term technical indicators. Momentum, volatility, and volume-based features contribute only marginally once size and fundamentals are accounted for.
 
 4. **Prediction Asymmetry:** All models exhibit bias toward predicting positive returns and struggle to identify downside months, with the Neural Network showing the strongest positive class bias (only 18.5% recall on down months).
 
