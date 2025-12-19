@@ -254,8 +254,6 @@ The SQL query condition `c.datadate <= a.date` permits the use of quarterly data
 - The deduplication step ensures only the most recent quarter is used
 - The cross-sectional standardization reduces sensitivity to absolute timing
 
-**However**, this does not pose too much threat to our conclusion. If anything, the slight look-ahead bias would favor fundamental features, yet they still contribute less than momentum and volatility in permutation importance.
-
 ### 6.2. Temporal Lag of Fundamentals
 
 Quarterly accounting data inherently lags the prediction target by 2-5 months:
