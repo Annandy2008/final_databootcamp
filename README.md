@@ -308,7 +308,7 @@ All results in this project can be reproduced using the provided code and data a
 
 **Reproduction Steps:**
 1. Configure WRDS credentials (script will prompt for username/password)
-2. Run the main script: `python stock_prediction_model.py`
+2. Run the main script: `python 'DataBootcampFinal.ipynb'
 3. The script will automatically:
    - Query CRSP and Compustat data
    - Perform deduplication and feature engineering
