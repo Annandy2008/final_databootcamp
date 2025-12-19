@@ -245,11 +245,11 @@ Overall, coefficient magnitudes are small, reflecting weak linear relationships 
 
 This analysis merges CRSP monthly returns with Compustat quarterly fundamentals using a 6-month lookback window and the CRSP-Compustat link table. While this approach successfully links companies across databases, several considerations affect interpretation:
 
-### 6.1. Look-Ahead Bias (Minor)
+### 6.1. Look-Ahead Bias
 
 The SQL query condition `c.datadate <= a.date` permits the use of quarterly data released during the prediction month. For example, if predicting July returns, the query may include Q2 earnings announced mid-July, which would not have been available at the beginning of July.
 
-**Impact:** This introduces mild look-ahead bias that may slightly inflate the apparent predictive power of ROE and P/B ratios. The effect is estimated to be small (1-3% of feature importance) because:
+**Impact:** This introduces mild look-ahead bias that may slightly inflate the apparent predictive power of ROE and P/B ratios. The effect is estimated to be small because:
 - Most quarterly reports are released 45-90 days after quarter-end
 - The deduplication step ensures only the most recent quarter is used
 - The cross-sectional standardization reduces sensitivity to absolute timing
